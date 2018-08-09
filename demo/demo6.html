@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>动态改变颜色</title>
+</head>
+<body>
+
+    <div>
+        <canvas id="webgl" width="500" height="500"></canvas>
+    </div>
+    
+<script src="../js/webgl-utils.js"></script>
+<script src="../js/webgl-debug.js"></script>
+<script src="../js/cuon-utils.js"></script>
+<script>
+    var HSHADER_SOURCE=
+        'attribute vec4 a_Position;\n'+
+        'void main(){\n'+
+        '   gl_Position=a_Position;\n'+
+        '   gl_PointSize=10.0;\n'+
+        '}\n';
+    var FSHADER_SOURCE=
+        'precision mediump float;\n'+
+        'uniform vec4 u_FragColor;\n'+
+        'void main(){\n'+
+        '   gl_FragColor=u_FragColor;\n'+
+        '}\n';
+    main();
+    function main(){
+        var canvas=document.getElementById('webgl');
+        var gl=getWebGLContext(canvas);
+        var g_points=[];
+        var g_colors=[];
+        if(!gl){
+            console.warn('Not gl!');
+            return ;
+        }
+        if(!initShaders(gl,HSHADER_SOURCE,FSHADER_SOURCE)){
+            console.warn('initShaders failed!');
+            return ;
+        }
+        var a_Position=gl.getAttribLocation(gl.program,'a_Position');
+        var u_FragColor=gl.getUniformLocation(gl.program,'u_FragColor');
+        if(a_Position<0){
+            console.warn('Not a_Position');
+            return ;
+        }
+        if(!u_FragColor){
+            console.warn('Not u_FragColor');
+            return ;
+        }
+        gl.clearColor(0,0,0,1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.POINTS,0,1);
+        canvas.onmousedown=function(ev){
+            clickFn(ev,gl,this,a_Position,u_FragColor);
+        }
+        function clickFn(ev,gl,canvas,a_Position,u_FragColor){
+            var x=ev.clientX;
+            var y=ev.clientY;
+            var rect=canvas.getBoundingClientRect();
+            x=((x-rect.left)-canvas.width/2)/(canvas.width/2);
+            y=(canvas.height/2-(y-rect.top))/(canvas.height/2);
+            g_points.push({
+                x:x,
+                y:y
+            });
+            if(x>0 && y>0){
+                g_colors.push([1,1,1,1]);
+            }else if(x<0 && y>0){
+                g_colors.push([0,1,1,1]);
+            }else if(x<0 && y<0){
+                g_colors.push([0,0,1,1]);
+            }else{
+                g_colors.push([0,1,0,1]);
+            }
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            for(var i=0;i<g_points.length;i++){
+                gl.vertexAttrib3f(a_Position,g_points[i]['x'],g_points[i]['y'],1);
+                gl.uniform4f(u_FragColor,g_colors[i][0],g_colors[i][1],g_colors[i][2],g_colors[i][3]);
+                gl.drawArrays(gl.POINTS,0,1);
+            }
+        }
+    }
+</script>
+</body>
+</html>
