@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>三角形</title>
+</head>
+
+<body>
+
+    <div>
+        <canvas id="webgl" width="500" height="500"></canvas>
+    </div>
+
+    <script src="../js/webgl-utils.js"></script>
+    <script src="../js/webgl-debug.js"></script>
+    <script src="../js/cuon-utils.js"></script>
+    <script>
+        var HSHADER_SOURCE =
+            'attribute vec4 a_Position;\n' +
+            'void main(){\n' +
+            '   gl_Position=a_Position;\n' +
+            '   gl_PointSize=10.0;\n' +
+            '}\n';
+        var FSHADER_SOURCE =
+            'precision mediump float;\n' +
+            'uniform vec4 u_FragColor;\n' +
+            'void main(){\n' +
+            '   gl_FragColor=u_FragColor;\n' +
+            '}\n';
+        main();
+
+        function main() {
+            var canvas = document.getElementById('webgl');
+            var gl = getWebGLContext(canvas);
+            if (!gl) {
+                console.warn('Not gl!');
+                return;
+            }
+            if (!initShaders(gl, HSHADER_SOURCE, FSHADER_SOURCE)) {
+                console.warn('initShaders failed!');
+                return;
+            }
+            var n = initVertexBuffers(gl);
+            var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+            if (!u_FragColor) {
+                console.warn('Not u_FragColor!');
+            }
+            gl.clearColor(0, 0, 0, 1);
+            gl.uniform4f(u_FragColor, 0, 1, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.POINTS, 0, n);
+
+            function initVertexBuffers(gl) {
+                var vertices = new Float32Array([0.0, 0.5, -0.5, -0.5, 0.5, -0.5]);
+                var n = 3;
+                var vertexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+                var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+                gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(a_Position);
+                return n;
+            }
+        }
+    </script>
+</body>
+
+</html>
